@@ -1,10 +1,10 @@
 {
   "name": "@gallant/config",
   "version": "0.1.0",
-  "description": "Simple TypeScript/ES2017 class to represent either values",
+  "description": "Simple TypeScript/ES2017 class to load configuration files from a folder",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
-  "repository": "pedromsilvapt/data-config",
+  "repository": "pedromsilvapt/gallant-config",
   "keywords": [
     "js",
     "config",

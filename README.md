@@ -1,15 +1,15 @@
 # Config
 
-> Config module with optional type validation and multiple optional override files
+> Simple TypeScript/ES2017 class to load configuration files from a folder
 
 # Installation
 ```shell
-npm install --save @pedromsilva/data-config
+npm install --save @gallant/config
 ```
 
 # Usage
 ```typescript
-import { Config } from '@pedromsilva/data-config';
+import { Config } from '@gallant/config';
 
 // Can either be a folder or a file name
 const config = Config.load( 'config' );
@@ -27,7 +27,7 @@ const value = fullConfig.get<OptionalType>( 'key.value', 'optional default value
 By default the app uses the JSON loader. If your config files use another format, you can provide it a custom loader. For example, using the `json5` module:
 
 ```typescript
-import { Config } from '@pedromsilva/data-config';
+import { Config } from '@gallant/config';
 import JSON5 from 'json5';
 
 const config = Config.load( 'config', [ new class {
