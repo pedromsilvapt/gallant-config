@@ -1,0 +1,34 @@
+{
+  "name": "@gallant/config",
+  "version": "0.1.0",
+  "description": "Simple TypeScript/ES2017 class to represent either values",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "repository": "pedromsilvapt/data-config",
+  "keywords": [
+    "js",
+    "config",
+    "data",
+    "values",
+    "container"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pedro M. Silva <pemiolsi@hotmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/extend": "^3.0.1",
+    "@types/js-yaml": "^4.0.5",
+    "@types/mz": "^2.7.0",
+    "@types/node": "^13.5.0",
+    "@types/object-path": "^0.11.0"
+  },
+  "dependencies": {
+    "@gallant/schema": "^0.1.4",
+    "extend": "^3.0.2",
+    "js-yaml": "^3.9.1",
+    "mz": "^2.7.0",
+    "object-path": "^0.11.4"
+  }
+}
