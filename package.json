@@ -1,6 +1,6 @@
 {
   "name": "@gallant/config",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Simple TypeScript/ES2017 class to load configuration files from a folder",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -26,8 +26,10 @@
   },
   "dependencies": {
     "@gallant/schema": "^0.1.4",
+    "chalk": "^4.0.0",
     "extend": "^3.0.2",
     "js-yaml": "^3.9.1",
+    "kdljs": "^0.1.4",
     "mz": "^2.7.0",
     "object-path": "^0.11.4"
   }

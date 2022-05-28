@@ -57,3 +57,5 @@ typings/
 .env
 
 .vscode/*
+
+/src/examples

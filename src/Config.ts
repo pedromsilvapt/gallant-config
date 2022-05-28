@@ -58,7 +58,7 @@ export interface ConfigContext {
     platform: string;
 }
 
-export class Config {
+export class Config<T extends object = any> {
     protected static instance : Config;
 
     public static formats : ConfigFormat[] = [
@@ -219,7 +219,11 @@ export class Config {
         return filesNamesToLoad;
     }
 
-    static async loadAsync ( folder : string, formats : ConfigFormat[] = Config.formats ) : Promise<Config> {
+    static async loadAsync ( folder : string, formats : ConfigFormat | ConfigFormat[] = Config.formats ) : Promise<Config> {
+        if (!(formats instanceof Array)) {
+            formats = formats != null ? [formats] : [];
+        }
+
         let data = {};
 
         let files = await Config.getFilesAsync( folder, formats );
@@ -233,7 +237,11 @@ export class Config {
         return new Config( data );
     }
 
-    static load ( folder : string, formats : ConfigFormat[] = Config.formats ) : Config {
+    static load ( folder : string, formats : ConfigFormat | ConfigFormat[] = Config.formats ) : Config {
+        if (!(formats instanceof Array)) {
+            formats = formats != null ? [formats] : [];
+        }
+
         let data = {};
 
         let files = Config.getFiles( folder, formats );
@@ -265,7 +273,7 @@ export class Config {
         return new Config( data );
     }
 
-    data : any;
+    data : T;
 
     constructor ( data : any ) {
         this.data = data;

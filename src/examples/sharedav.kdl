@@ -1,0 +1,29 @@
+role "admin" {
+    user "pedro" "123"
+
+    allow "all"
+}
+
+role "users" {
+    user "antonio" "123"
+
+    allow "read"
+
+    path "/Installers" {
+        deny "all"
+    }
+}
+
+mount "/" {
+    fs type="physical" path=r"D:\Installers" {
+        ignore "*.arw"
+    }
+}
+
+remote "Pedro" address="192.168.0.4" port=8009
+
+remote "António" address="192.168.0.1" port=8009
+
+server {
+    port 8009
+}
