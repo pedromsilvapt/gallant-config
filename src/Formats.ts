@@ -45,6 +45,12 @@ export class KDLFormat implements ConfigFormat {
     public parse ( content : string ) : any {
         const nodes = parseKDL( content );
 
+        if (nodes.errors?.length > 0) {
+            const message = `Parse failed with the following errors:\n${nodes.errors.map( err => '\t' + err.message ).join( '\n' )}`;
+
+            throw new Error( message );
+        }
+
         const root = {
             name: '',
             children: nodes.output,
