@@ -1,24 +1,24 @@
-import { 
+import {
     // Schema Utilities
-    Schema, 
-    SchemaKind, 
+    Schema,
+    SchemaKind,
     SchemaUtils,
-    InnerSchema, 
-    
+    InnerSchema,
+
     // Value utilities
-    ValueType, 
-    ValueTypeLike, 
+    ValueType,
+    ValueTypeLike,
     ValueUtils,
 
     // Schema Types
-    ObjectSchema, 
-    ChildrenSchema, 
-    PropertySchema, 
-    ValuesSchema, 
+    ObjectSchema,
+    ChildrenSchema,
+    PropertySchema,
+    ValuesSchema,
     TagSchema,
     NodeSchema,
-    DeferredSchema, 
-    DynamicSchema, 
+    DeferredSchema,
+    DynamicSchema,
 } from './Schema';
 
 // Decorators
@@ -32,7 +32,23 @@ function propertyDecorator(childSchema: Schema): PropertyDecorator {
     const fn: any = (target: Object, propertyKey: string) => {
         const schema = getObjectSchema(target);
 
+        let existingSchema = schema.properties[propertyKey];
+
         schema.properties[propertyKey] = childSchema;
+
+        // This is meant to allow decorators @Optional() and @Default() to appear after the @Property/@Value/@Child ones
+        // If we did not check this, their values would simply be overriden
+        if (existingSchema != null) {
+            if ((SchemaUtils.isKind(childSchema, 'children') && SchemaUtils.isKind(existingSchema, 'children'))
+             || (SchemaUtils.isKind(childSchema, 'values') && SchemaUtils.isKind(existingSchema, 'values'))) {
+                childSchema.optional = existingSchema.optional;
+                childSchema.default = existingSchema.default;
+            }
+
+            if ((SchemaUtils.isKind(childSchema, 'property') && SchemaUtils.isKind(existingSchema, 'property'))) {
+                childSchema.optional = existingSchema.optional;
+            }
+        }
     };
 
     fn[InnerSchema] = childSchema;
@@ -41,7 +57,7 @@ function propertyDecorator(childSchema: Schema): PropertyDecorator {
 }
 
 export interface ChildrenOptions {
-    
+
 }
 
 export function Children (tagSchema: string | symbol, type: any, options?: ChildrenOptions) : PropertyDecorator;
@@ -75,7 +91,7 @@ export function Children (arg0: string | symbol | Record<string | symbol, any>, 
 }
 
 export interface ChildOptions {
-    
+
 }
 
 export function Child (tagSchema: string | symbol, type: any, options?: ChildOptions) : PropertyDecorator;
@@ -109,7 +125,7 @@ export function Child (arg0: string | symbol | Record<string | symbol, any>, arg
 }
 
 export interface PropertyOptions {
-    
+
 }
 
 export function Property (name: string, type: ValueTypeLike | ValueTypeLike[], options?: PropertyOptions) {
@@ -169,7 +185,7 @@ export function Optional () {
 
         const propertySchema = schema.properties[propertyKey];
 
-        if (SchemaUtils.isKind(propertySchema, 'children') 
+        if (SchemaUtils.isKind(propertySchema, 'children')
          || SchemaUtils.isKind(propertySchema, 'values')
          || SchemaUtils.isKind(propertySchema, 'property')) {
             propertySchema.optional = true;
@@ -178,12 +194,12 @@ export function Optional () {
 }
 
 export function Default () {
-    return (target: Object, propertyKey: string) => { 
+    return (target: Object, propertyKey: string) => {
         const schema = getObjectSchema(target);
 
         const propertySchema = schema.properties[propertyKey];
 
-        if (SchemaUtils.isKind(propertySchema, 'children') 
+        if (SchemaUtils.isKind(propertySchema, 'children')
          || SchemaUtils.isKind(propertySchema, 'values')) {
             propertySchema.default = true;
         }
