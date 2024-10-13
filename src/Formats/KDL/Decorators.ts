@@ -40,13 +40,10 @@ function propertyDecorator(childSchema: Schema): PropertyDecorator {
         // If we did not check this, their values would simply be overriden
         if (existingSchema != null) {
             if ((SchemaUtils.isKind(childSchema, 'children') && SchemaUtils.isKind(existingSchema, 'children'))
-             || (SchemaUtils.isKind(childSchema, 'values') && SchemaUtils.isKind(existingSchema, 'values'))) {
+             || (SchemaUtils.isKind(childSchema, 'values') && SchemaUtils.isKind(existingSchema, 'values'))
+             || (SchemaUtils.isKind(childSchema, 'property') && SchemaUtils.isKind(existingSchema, 'property'))) {
                 childSchema.optional = existingSchema.optional;
                 childSchema.default = existingSchema.default;
-            }
-
-            if ((SchemaUtils.isKind(childSchema, 'property') && SchemaUtils.isKind(existingSchema, 'property'))) {
-                childSchema.optional = existingSchema.optional;
             }
         }
     };
@@ -132,6 +129,7 @@ export function Property (name: string, type: ValueTypeLike | ValueTypeLike[], o
     const propertySchema: PropertySchema = {
         [SchemaKind]: 'property',
         optional: false,
+        default: false,
         name: name,
         types:  type
             ? ValueUtils.valueOf(type, true)
@@ -200,7 +198,8 @@ export function Default () {
         const propertySchema = schema.properties[propertyKey];
 
         if (SchemaUtils.isKind(propertySchema, 'children')
-         || SchemaUtils.isKind(propertySchema, 'values')) {
+         || SchemaUtils.isKind(propertySchema, 'values')
+         || SchemaUtils.isKind(propertySchema, 'property')) {
             propertySchema.default = true;
         }
     };

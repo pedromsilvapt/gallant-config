@@ -14,7 +14,7 @@ export class NodesReader {
     public errors: NodesReaderDeserializationError[] = [];
 
     protected children: NodesReaderChild[] = [new NodesReaderChild("top()")];
-    
+
     protected attribute: string | null = null;
 
     protected valueSingle: boolean | null = null;

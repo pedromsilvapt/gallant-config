@@ -87,8 +87,8 @@ export class PhysicalFileSystem extends FileSystem {
     @Property('path', String)
     path!: string;
 
-    @Children('ignore', String)
-    ignore: string[] = [];
+    @Optional() @Children('ignore', String)
+    ignore: string[] = ['thumbs.db'];
 }
 
 const format = new KDLFormat(SchemaUtils.schemaOf(ShareDavConfig));

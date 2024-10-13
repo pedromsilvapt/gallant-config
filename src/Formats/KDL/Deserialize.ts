@@ -1,16 +1,16 @@
 import { ConfigNode, ConfigValue, NodesReader } from './Core';
-import { 
+import {
     // Symbols
-    InnerSchema, 
-    SchemaKind, 
-    
-    Schema, 
-    ChildrenSchema, 
-    PropertySchema, 
-    DeferredSchema, 
-    DynamicSchema, 
+    InnerSchema,
+    SchemaKind,
+
+    Schema,
+    ChildrenSchema,
+    PropertySchema,
+    DeferredSchema,
+    DynamicSchema,
     ValuesSchema,
-    ObjectSchema, 
+    ObjectSchema,
 
     SchemaUtils,
     ValueUtils,
@@ -24,14 +24,14 @@ interface ChildConfigNode {
     node: ConfigNode;
 }
 
-export class Deserializer<C = any> {    
+export class Deserializer<C = any> {
     public context: C;
 
     public constructor (context?: C) {
         this.context = context;
     }
 
-    public deserialize (node: ConfigNode, schema: Schema, reader?: NodesReader): unknown {
+    public deserialize (node: ConfigNode, schema: Schema, reader?: NodesReader, defaultValue: unknown = null): unknown {
         // If the user did not pass a reader, we should throw an Error when the deserialization failed
         const shouldThrow = reader == null;
 
@@ -41,21 +41,21 @@ export class Deserializer<C = any> {
 
         try {
             if (SchemaUtils.isKind(schema, 'object')) {
-                value = this.deserializeObjectSchema(node, schema, reader);
+                value = this.deserializeObjectSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'children')) {
-                value = this.deserializeChildrenSchema(node, schema, reader);
+                value = this.deserializeChildrenSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'property')) {
-                value = this.deserializePropertySchema(node, schema, reader);
+                value = this.deserializePropertySchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'values')) {
-                value = this.deserializeValuesSchema(node, schema, reader);
+                value = this.deserializeValuesSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'tag')) {
-                value = this.deserializeTagSchema(node, schema, reader);
+                value = this.deserializeTagSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'node')) {
-                value = this.deserializeNodeSchema(node, schema, reader);
+                value = this.deserializeNodeSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'deferred')) {
-                value = this.deserializeDeferredSchema(node, schema, reader);
+                value = this.deserializeDeferredSchema(node, schema, reader, defaultValue);
             } else if (SchemaUtils.isKind(schema, 'dynamic')) {
-                value = this.deserializeDynamicSchema(node, schema, reader);
+                value = this.deserializeDynamicSchema(node, schema, reader, defaultValue);
             } else {
                 reader.addError(`Invalid schema kind ${(schema as any)[SchemaKind]}`);
             }
@@ -73,21 +73,21 @@ export class Deserializer<C = any> {
         return value;
     }
 
-    public deserializeDeferredSchema (node: ConfigNode, schema: DeferredSchema, reader: NodesReader) {
+    public deserializeDeferredSchema (node: ConfigNode, schema: DeferredSchema, reader: NodesReader, defaultValue: unknown) {
         const childSchema = schema.proxy[InnerSchema];
 
         if (childSchema != null) {
-            return this.deserialize(node, childSchema, reader);
+            return this.deserialize(node, childSchema, reader, defaultValue);
         } else {
             return null;
         }
     }
 
-    public deserializeDynamicSchema (node: ConfigNode, schema: DynamicSchema, reader: NodesReader) {
-        return this.deserialize(node, schema.factory(node, this.context), reader);
+    public deserializeDynamicSchema (node: ConfigNode, schema: DynamicSchema, reader: NodesReader, defaultValue: unknown) {
+        return this.deserialize(node, schema.factory(node, this.context), reader, defaultValue);
     }
 
-    public deserializeObjectSchema (node: ConfigNode, schema: ObjectSchema, reader: NodesReader) {
+    public deserializeObjectSchema (node: ConfigNode, schema: ObjectSchema, reader: NodesReader, defaultValue: unknown) {
         let object: any = null;
 
         if (schema.classConstructor) {
@@ -97,13 +97,13 @@ export class Deserializer<C = any> {
         }
 
         for (const property of Object.keys(schema.properties)) {
-            object[property] = this.deserialize(node, schema.properties[property], reader);
+            object[property] = this.deserialize(node, schema.properties[property], reader, object[property]);
         }
 
         return object;
     }
 
-    public deserializeChildrenSchema (node: ConfigNode, schema: ChildrenSchema, reader: NodesReader): unknown {
+    public deserializeChildrenSchema (node: ConfigNode, schema: ChildrenSchema, reader: NodesReader, defaultValue: unknown): unknown {
         let result: ChildConfigNode[] | ChildConfigNode | null = null;
 
         if (schema.single === false) {
@@ -149,10 +149,12 @@ export class Deserializer<C = any> {
         if (result instanceof Array) {
             // In case schema.single == false
             if (result.length === 0) {
-                if (schema.default === false && schema.optional === false) {                    
+                if (schema.default === false && schema.optional === false) {
                     const expectedTags = Object.keys(schema.tagSchemas).join(', ');
 
                     reader.addError(`Expected one or more of the following child tags, found none: ${expectedTags}`);
+                } else {
+                    return defaultValue;
                 }
             }
 
@@ -172,7 +174,7 @@ export class Deserializer<C = any> {
 
                     reader.addError(`Expected one of the following child tags, found none: ${expectedTags}`);
 
-                    return null;
+                    return defaultValue;
                 } else if (schema.default === true) {
                     result = {
                         node: {
@@ -190,7 +192,7 @@ export class Deserializer<C = any> {
                     };
                 } else {
                     // Then schema.optional must be true
-                    return null;
+                    return defaultValue;
                 }
             }
 
@@ -205,7 +207,7 @@ export class Deserializer<C = any> {
         }
     }
 
-    public deserializePropertySchema (node: ConfigNode, schema: PropertySchema, reader: NodesReader): ConfigValue {
+    public deserializePropertySchema (node: ConfigNode, schema: PropertySchema, reader: NodesReader, defaultValue: unknown): ConfigValue {
         if (schema.name in node.properties) {
             reader.beginProperty(schema.name);
 
@@ -223,6 +225,10 @@ export class Deserializer<C = any> {
         }
 
         if (schema.optional) {
+            return defaultValue as ConfigValue;
+        }
+
+        if (schema.default) {
             return ValueUtils.default(schema.types);
         }
 
@@ -231,16 +237,16 @@ export class Deserializer<C = any> {
         reader.endProperty();
     }
 
-    public deserializeTagSchema (node: ConfigNode, schema: TagSchema, reader: NodesReader) {
+    public deserializeTagSchema (node: ConfigNode, schema: TagSchema, reader: NodesReader, defaultValue: unknown) {
         return node.name;
     }
 
-    public deserializeNodeSchema (node: ConfigNode, schema: NodeSchema, reader: NodesReader) {
+    public deserializeNodeSchema (node: ConfigNode, schema: NodeSchema, reader: NodesReader, defaultValue: unknown) {
         return node;
     }
 
-    public deserializeValuesSchema (node: ConfigNode, schema: ValuesSchema, reader: NodesReader) {
-        if (schema.start < node.values.length && 
+    public deserializeValuesSchema (node: ConfigNode, schema: ValuesSchema, reader: NodesReader, defaultValue: unknown) {
+        if (schema.start < node.values.length &&
            (schema.single || schema.length === null || schema.length === Infinity || schema.start + schema.length <= node.values.length)) {
             if (schema.single === true) {
                 reader.beginValue(true, schema.start);
@@ -276,6 +282,10 @@ export class Deserializer<C = any> {
         }
 
         if (schema.optional) {
+            return defaultValue;
+        }
+
+        if (schema.default) {
             if (schema.single) {
                 return ValueUtils.default(schema.types);
             } else {

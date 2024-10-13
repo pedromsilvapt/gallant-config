@@ -20,6 +20,10 @@ mount "/" {
     }
 }
 
+mount "/movies" {
+    fs type="physical" path=r"D:\Movies"
+}
+
 remote "Pedro" address="192.168.0.4" port=8009
 
 remote "António" address="192.168.0.1" port=8009

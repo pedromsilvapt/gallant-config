@@ -72,7 +72,8 @@ export interface PropertySchema {
     [SchemaKind]: 'property';
     name: string;
     types: ValueType[];
-    optional: any;
+    optional: boolean;
+    default: boolean;
 }
 
 export interface TagSchema {
@@ -206,4 +207,3 @@ export class ValueUtils {
     }
 
 }
-
