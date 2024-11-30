@@ -1,6 +1,6 @@
 {
   "name": "@gallant/config",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Simple TypeScript/ES2017 class to load configuration files from a folder",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",

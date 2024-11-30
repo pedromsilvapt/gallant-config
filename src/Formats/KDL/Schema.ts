@@ -122,7 +122,7 @@ export class SchemaUtils {
         } as DeferredSchema;
     }
 
-    public static dynamic (factory: (node: ConfigNode) => Schema): DynamicSchema | DynamicSchema {
+    public static dynamic (factory: (node: ConfigNode, context: any) => Schema): DynamicSchema {
         return {
             [SchemaKind]: 'dynamic',
             factory
