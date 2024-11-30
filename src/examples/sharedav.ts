@@ -5,7 +5,7 @@ import {
     Property,
     Value, Values,
     Optional, Default,
-    Schema, SchemaUtils
+    SchemaUtils
 } from '../kdl';
 
 export class Server {
@@ -28,7 +28,7 @@ export class RolePath {
     path!: string;
 
     @Children({ 'allow': Allow, 'deny': Deny, 'path': RolePath })
-    permissions: (Allow | Deny)[] = [];
+    permissions: (Allow | Deny | RolePath)[] = [];
 }
 
 export class User {
@@ -44,7 +44,7 @@ export class Role {
     users: User[] = [];
 
     @Children({ 'allow': Allow, 'deny': Deny, 'path': RolePath })
-    permissions: (Allow | Deny)[] = [];
+    permissions: (Allow | Deny | RolePath)[] = [];
 }
 
 export const FileSystemFactory = SchemaUtils.dynamic(configNode => {

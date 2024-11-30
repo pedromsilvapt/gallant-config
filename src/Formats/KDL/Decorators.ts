@@ -19,7 +19,9 @@ import {
     NodeSchema,
     DeferredSchema,
     DynamicSchema,
+    SchemaTagsFactory,
 } from './Schema';
+import * as assert from 'assert';
 
 // Decorators
 export type PropertyDecorator = {
@@ -57,12 +59,27 @@ export interface ChildrenOptions {
 
 }
 
+export function Children (tagSchema: SchemaTagsFactory, type: any, options?: ChildOptions) : PropertyDecorator;
 export function Children (tagSchema: string | symbol, type: any, options?: ChildrenOptions) : PropertyDecorator;
 export function Children (tagSchema: Record<string | symbol, any>, options?: ChildrenOptions) : PropertyDecorator;
-export function Children (arg0: string | symbol | Record<string | symbol, any>, arg1?: any | ChildrenOptions, arg2?: ChildrenOptions) : PropertyDecorator {
-    const tagSchema: Record<string | symbol, any> = typeof arg0 === 'string' || typeof arg0 === 'symbol'
-        ? { [arg0]: arg1 }
-        : arg0;
+export function Children (arg0: string | symbol | Record<string | symbol, any> | SchemaTagsFactory, arg1?: any | ChildrenOptions, arg2?: ChildrenOptions) : PropertyDecorator {
+    let tagSchemas: SchemaTagsFactory;
+
+    if (typeof arg0 === 'string' || typeof arg0 === 'symbol') {
+        tagSchemas = () => ({ [arg0]: SchemaUtils.schemaOf(arg1) });
+    } else if (typeof arg0 === 'function') {
+        tagSchemas = arg0 as SchemaTagsFactory;
+    } else {
+        const tagSchemasObject: Record<string | symbol, Schema> = {};
+
+        for (const key of [...Object.getOwnPropertyNames(arg0), ...Object.getOwnPropertySymbols(arg0)]) {
+            let propertySchema = arg0[key];
+
+            tagSchemasObject[key] = SchemaUtils.schemaOf(propertySchema);
+        }
+
+        tagSchemas = () => tagSchemasObject;
+    }
 
     // If the first argument is a string, then the options are in position 2 (starting from 0)
     // Otherwise they are in position 1
@@ -75,14 +92,8 @@ export function Children (arg0: string | symbol | Record<string | symbol, any>, 
         default: false,
         optional: true,
         single: false,
-        tagSchemas: {},
+        tagSchemas: tagSchemas,
     };
-
-    for (const key of [...Object.getOwnPropertyNames(tagSchema), ...Object.getOwnPropertySymbols(tagSchema)]) {
-        let propertySchema = tagSchema[key];
-
-        childrenSchema.tagSchemas[key] = SchemaUtils.schemaOf(propertySchema);
-    }
 
     return propertyDecorator(childrenSchema);
 }
@@ -91,16 +102,31 @@ export interface ChildOptions {
 
 }
 
+export function Child (tagSchema: SchemaTagsFactory, type: any, options?: ChildOptions) : PropertyDecorator;
 export function Child (tagSchema: string | symbol, type: any, options?: ChildOptions) : PropertyDecorator;
 export function Child (tagSchema: Record<string | symbol, any>, options?: ChildOptions) : PropertyDecorator;
-export function Child (arg0: string | symbol | Record<string | symbol, any>, arg1?: any | ChildOptions, arg2?: ChildOptions) : PropertyDecorator {
-    const tagSchema: Record<string | symbol, any> = typeof arg0 === 'string' || typeof arg0 === 'symbol'
-        ? { [arg0]: arg1 }
-        : arg0;
+export function Child (arg0: string | symbol | Record<string | symbol, any> | SchemaTagsFactory, arg1?: any | ChildOptions, arg2?: ChildOptions) : PropertyDecorator {
+    let tagSchemas: SchemaTagsFactory;
+
+    if (typeof arg0 === 'string' || typeof arg0 === 'symbol') {
+        tagSchemas = () => ({ [arg0]: SchemaUtils.schemaOf(arg1) });
+    } else if (typeof arg0 === 'function') {
+        tagSchemas = arg0 as SchemaTagsFactory;
+    } else {
+        const tagSchemasObject: Record<string | symbol, Schema> = {};
+
+        for (const key of [...Object.getOwnPropertyNames(arg0), ...Object.getOwnPropertySymbols(arg0)]) {
+            let propertySchema = arg0[key];
+
+            tagSchemasObject[key] = SchemaUtils.schemaOf(propertySchema);
+        }
+
+        tagSchemas = () => tagSchemasObject;
+    }
 
     // If the first argument is a string, then the options are in position 2 (starting from 0)
     // Otherwise they are in position 1
-    const options: ChildrenOptions = typeof arg0 === 'string'
+    const options: ChildrenOptions = typeof arg0 === 'string' || typeof arg0 === 'symbol'
         ? arg2
         : arg1;
 
@@ -109,14 +135,8 @@ export function Child (arg0: string | symbol | Record<string | symbol, any>, arg
         default: false,
         optional: false,
         single: true,
-        tagSchemas: {},
+        tagSchemas: tagSchemas,
     };
-
-    for (const key of [...Object.getOwnPropertyNames(tagSchema), ...Object.getOwnPropertySymbols(tagSchema)]) {
-        let propertySchema = tagSchema[key];
-
-        childSchema.tagSchemas[key] = SchemaUtils.schemaOf(propertySchema);
-    }
 
     return propertyDecorator(childSchema);
 }
@@ -230,5 +250,9 @@ function getObjectSchema (target: any): ObjectSchema {
         };
     }
 
-    return target[InnerSchema] as ObjectSchema;
+    const schema = target[InnerSchema];
+
+    assert(SchemaUtils.isKind(schema, "object"));
+
+    return schema as ObjectSchema;
 }

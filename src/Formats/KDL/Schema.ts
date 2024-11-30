@@ -1,4 +1,5 @@
 import { ConfigNode, ConfigValue } from './Core';
+import * as assert from 'assert';
 
 interface Class<T> {
     new(): T;
@@ -52,7 +53,7 @@ export interface ObjectSchema {
 
 export interface ChildrenSchema {
     [SchemaKind]: 'children';
-    tagSchemas: Record<string | symbol, Schema>;
+    tagSchemas: SchemaTagsFactory;
     single: boolean;
     optional: boolean;
     default: boolean;
@@ -83,6 +84,10 @@ export interface TagSchema {
 export interface NodeSchema {
     [SchemaKind]: 'node';
 }
+
+export type SchemaTagsFactory = (context: any) => SchemaTags;
+
+export type SchemaTags = Record<string | symbol, Schema>;
 
 export class SchemaUtils {
     public static isKind<K extends 'object' | 'children' | 'values' | 'property' | 'tag' | 'node' | 'deferred' | 'dynamic'> (
@@ -126,6 +131,29 @@ export class SchemaUtils {
         return {
             [SchemaKind]: 'dynamic',
             factory
+        };
+    }
+
+    public static context(contextKey: string | symbol, configurationHelpMessage?: string): SchemaTagsFactory {
+        assert(contextKey != null);
+
+        return (context: any) => {
+            if (context == null) {
+                throw new Error(`Config context cannot be null.`);
+            }
+
+            const tagSchemas = context[contextKey];
+
+            if (tagSchemas == null) {
+                if (configurationHelpMessage != null) {
+                    throw new Error(`Config context does not contain ${contextKey.toString()}.`);
+                } else {
+                    throw new Error(`Config context does not contain ${contextKey.toString()}.` +
+                        ` Make sure you have called ${configurationHelpMessage} before loading your configuration.`);
+                }
+            }
+
+            return tagSchemas;
         };
     }
 }

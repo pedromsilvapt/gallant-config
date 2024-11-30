@@ -112,13 +112,15 @@ export class Deserializer<C = any> {
 
         let exitChildrenLoop = false;
 
+        const tagSchemas = schema.tagSchemas(this.context);
+
         for (const child of node.children) {
             let childSchema = null;
 
-            if (child.name in schema.tagSchemas) {
-                childSchema = schema.tagSchemas[child.name];
-            } else if (Any in schema.tagSchemas) {
-                childSchema = schema.tagSchemas[Any];
+            if (child.name in tagSchemas) {
+                childSchema = tagSchemas[child.name];
+            } else if (Any in tagSchemas) {
+                childSchema = tagSchemas[Any];
             }
 
             if (childSchema != null) {
@@ -150,7 +152,7 @@ export class Deserializer<C = any> {
             // In case schema.single == false
             if (result.length === 0) {
                 if (schema.default === false && schema.optional === false) {
-                    const expectedTags = Object.keys(schema.tagSchemas).join(', ');
+                    const expectedTags = Object.keys(tagSchemas).join(', ');
 
                     reader.addError(`Expected one or more of the following child tags, found none: ${expectedTags}`);
                 } else {
@@ -170,7 +172,7 @@ export class Deserializer<C = any> {
         } else {
             if (result === null) {
                 if (schema.default === false && schema.optional === false) {
-                    const expectedTags = Object.keys(schema.tagSchemas).join(', ');
+                    const expectedTags = Object.keys(tagSchemas).join(', ');
 
                     reader.addError(`Expected one of the following child tags, found none: ${expectedTags}`);
 
@@ -188,7 +190,7 @@ export class Deserializer<C = any> {
                                 values: []
                             }
                         },
-                        schema: schema.tagSchemas[Object.keys(schema.tagSchemas)[0]]
+                        schema: tagSchemas[Object.keys(tagSchemas)[0]]
                     };
                 } else {
                     // Then schema.optional must be true
